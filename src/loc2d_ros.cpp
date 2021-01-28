@@ -239,6 +239,16 @@ void lama::Loc2DROS::onLaserScan(const sensor_msgs::LaserScanConstPtr& laser_sca
             tf::Transform tmp_tf(tf::createQuaternionFromYaw(pose.rotation()), tf::Vector3(pose.x(), pose.y(), 0));
             tf::Stamped<tf::Pose> tmp_tf_stamped (tmp_tf.inverse(), laser_scan->header.stamp, base_frame_id_);
             tf_->transformPose(odom_frame_id_, tmp_tf_stamped, odom_to_map);
+        
+            geometry_msgs::PoseWithCovarianceStamped stamped_pose;
+            stamped_pose.header.frame_id = global_frame_id_;
+            stamped_pose.header.stamp = laser_scan->header.stamp;
+            stamped_pose.pose.pose.position.x = pose.x();
+            stamped_pose.pose.pose.position.y = pose.y();
+            geometry_msgs::Quaternion q;
+            quaternionTFToMsg(tf::createQuaternionFromYaw(pose.rotation()) , q);
+            stamped_pose.pose.pose.orientation = q;
+            pose_pub_.publish(stamped_pose);
 
         }catch(tf::TransformException){
             ROS_WARN("Failed to subtract base to odom transform");
